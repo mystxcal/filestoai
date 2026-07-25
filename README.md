@@ -1,8 +1,6 @@
 # FilesToAI
 
-**Instantly export your codebase to AI. Smart filtering, one-click copy, global hotkey.**
-
-**Now available as both a CLI tool and Web Interface!**
+Export a codebase into clean, copy-ready context for ChatGPT, Claude, and other AI assistants.
 
 ![FilesToAI Screenshot](assets/image.png)
 
@@ -10,42 +8,35 @@
 
 ## 🚀 Quick Start
 
-### Option 1: Command Line (Instant)
-```bash
-# Install as a package
-pip install -e .
+### Install
 
-# Use anywhere
+```bash
+python -m pip install --upgrade filestoai
+```
+
+### Command line
+
+```bash
 filestoai .                      # Export current directory
 filestoai /path/to/project -gi   # With gitignore
 filestoai . --size 200           # Custom size limit (200 KB)
-filestoai --server               # Start web interface
 ```
 
-### Option 2: Web Interface
+### Web interface
+
 ```bash
-git clone https://github.com/mystxcal/FilesToAI
-cd FilesToAI
-pip install -e .
-
-# Start server (choose one):
-filestoai --server        # Via CLI
-# OR
-pip install -r requirements.txt
-python app.py             # Direct method
+filestoai --server
 ```
 
-**→** Open `http://127.0.0.1:5023`
+Then open `http://127.0.0.1:5023`.
 
 ---
 
 ## 💡 What It Does
 
-**CLI**: Run `filestoai .` in any directory → Output copied to clipboard instantly
+**CLI:** Run `filestoai .` in any directory to copy an AI-ready export to the clipboard.
 
-**Web**: Select files from your project → Generate AI-ready output → Copy with `Ctrl+Shift+Space`
-
-Perfect for feeding context to ChatGPT, Claude, and other LLMs.
+**Web:** Browse a project, select the useful files, keep media and documents separate, and generate or download the result.
 
 ---
 
@@ -60,8 +51,10 @@ Perfect for feeding context to ChatGPT, Claude, and other LLMs.
 
 ### Web Interface
 - ✓ `.gitignore` + custom patterns (with live testing)
+- ✓ Nested `.gitignore` support
 - ✓ Quick-select by extension
 - ✓ Hide unwanted files (images, logs, minified)
+- ✓ Separate attachment browser for media, PDFs, audio, and video
 - ✓ File size limits + real-time stats
 - 🔥 **Global Hotkey** — `Ctrl+Shift+Space` copies from anywhere
 - 🌓 **Dark/Light Mode** — Automatically themed
@@ -72,11 +65,6 @@ Perfect for feeding context to ChatGPT, Claude, and other LLMs.
 - **files.txt** — File contents concatenated
 - **project_map.txt** — Directory structure
 - **Smart Filtering** — Respect gitignore, size limits, custom patterns
-
-### 🔜 Coming Soon
-- 🐙 **GitHub Integration** — Export directly from GitHub repositories
-
----
 
 ## 📖 How To Use
 
@@ -114,7 +102,7 @@ python app.py        # Direct method
 
 | Step | Action |
 |------|--------|
-| **1** | Enter project path → Click **Load** |
+| **1** | Choose or paste a project folder → Click **Load** |
 | **2** | Configure filters & ignore patterns |
 | **3** | Check files/folders in tree view |
 | **4** | Click **Generate Output** or press `Ctrl+Shift+Space` |
@@ -177,11 +165,24 @@ See `app.py` for full docs.
 <summary><b>Global Hotkey (Web Only)</b></summary>
 
 Press anywhere with app running:
-1. Reads `filestoai_config.json`
+1. Reads the saved FilesToAI settings from your user data directory
 2. Generates output from last selected files
 3. Falls back to all files if none selected
 4. Copies to clipboard instantly
 </details>
+
+---
+
+## Development
+
+```bash
+git clone https://github.com/mystxcal/FilesToAI
+cd FilesToAI
+python -m pip install -e .
+python -m pytest
+```
+
+Runtime settings and hotkey logs are stored under `%LOCALAPPDATA%\FilesToAI` on Windows, not inside the installed package.
 
 ---
 

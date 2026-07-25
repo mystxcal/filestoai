@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FilesToAI - File Selector</title>
+    <title>FilesToAI — Codebase Exporter</title>
     <link rel="icon" href="/favicon.ico" type="image/png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
@@ -16,17 +16,21 @@
     <div class="container-fluid">
         <div class="row">
             <!-- Left Column: File Tree -->
-            <div class="col-md-5">
+            <div class="col-md-6">
                 <div id="path-input-container" class="form-group">
-                    <label for="path-input">Directory Path:</label>
+                    <label for="path-input">Project folder</label>
                     <div class="input-group">
                         <input type="text" id="path-input" class="form-control"
                             placeholder="e.g., C:\Users\YourName\Projects">
                         <div class="input-group-append">
+                            <button id="open-folder-button" class="btn btn-outline-info" title="Browse for folder">
+                                <i class="fas fa-folder-plus"></i> Open
+                            </button>
                             <button id="load-path-button" class="btn btn-primary">
                                 <i class="fas fa-folder-open"></i> Load
                             </button>
-                            <button id="show-history-button" class="btn btn-outline-secondary">
+                            <button id="show-history-button" class="btn btn-outline-secondary" aria-label="Recent folders"
+                                title="Recent folders">
                                 <i class="fas fa-history"></i>
                             </button>
                         </div>
@@ -49,7 +53,8 @@
                 <div class="settings-section">
                     <div class="settings-header">
                         <h5><i class="fas fa-sliders-h"></i> Settings</h5>
-                        <button class="btn btn-sm btn-outline-secondary toggle-settings-button">
+                        <button class="btn btn-sm btn-outline-secondary toggle-settings-button"
+                            aria-label="Toggle settings">
                             <i class="fas fa-chevron-down"></i>
                         </button>
                     </div>
@@ -97,6 +102,11 @@ __pycache__/</textarea>
                             <label class="custom-control-label" for="global-hotkey-toggle">Enable Global Hotkey
                                 (Ctrl+Shift+Space)</label>
                         </div>
+                        <div class="custom-control custom-switch mt-2">
+                            <input type="checkbox" class="custom-control-input" id="show-hidden-folders-toggle" {{ 'checked' if session.get('show_hidden_folders') else '' }}>
+                            <label class="custom-control-label" for="show-hidden-folders-toggle">Show Hidden Folders (e.g. .git, .vscode)
+                            </label>
+                        </div>
                     </div>
 
                     <!-- Size Slider -->
@@ -127,44 +137,11 @@ __pycache__/</textarea>
                         <div id="extension-pills" class="mt-2"></div>
 
                         <div class="common-extensions mt-2">
-                            <small class="d-block mb-1">Common extensions:</small>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".js">.js</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".ts">.ts</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".py">.py</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn"
-                                data-ext=".java">.java</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".cpp">.cpp</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".c">.c</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".rb">.rb</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".go">.go</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".php">.php</button>
-
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn"
-                                data-ext=".html">.html</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".css">.css</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".jsx">.jsx</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".tsx">.tsx</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".vue">.vue</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn"
-                                data-ext=".svelte">.svelte</button>
-
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn"
-                                data-ext=".json">.json</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".yml">.yml</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn"
-                                data-ext=".yaml">.yaml</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".xml">.xml</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".sql">.sql</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn"
-                                data-ext=".toml">.toml</button>
-
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".md">.md</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".txt">.txt</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".rst">.rst</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".csv">.csv</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".sh">.sh</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".bat">.bat</button>
-                            <button class="btn btn-sm btn-outline-secondary ext-pill-btn" data-ext=".ps1">.ps1</button>
+                            <small class="d-block mb-1">Common extensions detected:</small>
+                            <div id="dynamic-select-extensions">
+                                <!-- Dynamically populated by JS after tree loads -->
+                                <span class="text-muted" style="font-size: 0.8em; font-style: italic;">Loading extensions...</span>
+                            </div>
 
                             <button id="clear-extensions" class="btn btn-sm btn-outline-danger ml-1">
                                 <i class="fas fa-times-circle"></i> Clear All
@@ -180,7 +157,7 @@ __pycache__/</textarea>
 
                     <!-- Extension Hide Filter -->
                     <div id="extension-hide-container" class="form-group mt-4">
-                        <label for="extension-hide-input">Ignore by Extensions:</label>
+                        <label for="extension-hide-input">Ignore by Extensions: <span id="hide-filter-status" class="badge badge-success ml-2">SHOWING ALL</span></label>
                         <div class="input-group">
                             <input type="text" id="extension-hide-input" class="form-control"
                                 placeholder="Type extension to hide (e.g. .min.js)">
@@ -196,75 +173,11 @@ __pycache__/</textarea>
                         <div id="hide-extension-pills" class="mt-2"></div>
 
                         <div class="common-extensions mt-2">
-                            <small class="d-block mb-1">Common extensions to ignore:</small>
-                            <!-- Minified and source maps -->
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".min.js">.min.js</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".min.css">.min.css</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".map">.map</button>
-
-                            <!-- Binary and compiled files -->
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".pyc">.pyc</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".exe">.exe</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".dll">.dll</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".so">.so</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn" data-ext=".o">.o</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".obj">.obj</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".class">.class</button>
-
-                            <!-- Image files -->
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".png">.png</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".jpg">.jpg</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".jpeg">.jpeg</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".gif">.gif</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".ico">.ico</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".svg">.svg</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".webp">.webp</button>
-
-                            <!-- System and temp files -->
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".log">.log</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".tmp">.tmp</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".bak">.bak</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".cache">.cache</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".DS_Store">.DS_Store</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".swp">.swp</button>
-
-                            <!-- Other binary formats -->
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".zip">.zip</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".tar">.tar</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".gz">.gz</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".jar">.jar</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".pdf">.pdf</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".doc">.doc</button>
-                            <button class="btn btn-sm btn-outline-secondary hide-ext-pill-btn"
-                                data-ext=".docx">.docx</button>
+                            <small class="d-block mb-1">Common ignore extensions detected:</small>
+                            <div id="dynamic-hide-extensions">
+                                <!-- Dynamically populated by JS after tree loads -->
+                                <span class="text-muted" style="font-size: 0.8em; font-style: italic;">Loading ignore options...</span>
+                            </div>
 
                             <!-- Clear button -->
                             <button id="clear-hide-extensions" class="btn btn-sm btn-outline-danger ml-1">
@@ -286,6 +199,9 @@ __pycache__/</textarea>
 
                 <!-- Quick Controls -->
                 <div class="quick-controls">
+                    <button id="refresh-tree-button" class="btn btn-outline-info">
+                        <i class="fas fa-sync-alt"></i> Refresh Tree
+                    </button>
                     <button id="select-all" class="btn btn-outline-secondary">
                         <i class="fas fa-check-square"></i> Select All
                     </button>
@@ -299,28 +215,69 @@ __pycache__/</textarea>
                         <i class="fas fa-minus-square"></i> Collapse All
                     </button>
                     <button id="generate-project-map" class="btn btn-sm btn-outline-info">
-                        <i class="fas fa-sitemap"></i> Generate Project Map
+                        <i class="fas fa-sitemap"></i> Map Selected
                     </button>
                     <button id="generate-full-project-map" class="btn btn-sm btn-outline-info">
-                        <i class="fas fa-sitemap"></i> Generate Full Project Map
+                        <i class="fas fa-project-diagram"></i> Map All Files
                     </button>
                     <button id="generate-button" class="btn btn-sm btn-outline-info">
                         <i class="fas fa-file-code"></i> Generate Output
                     </button>
                 </div>
 
+                <div class="card mb-3" id="special-files-card" style="border: 1px solid var(--border-color); background-color: var(--file-bg);">
+                    <div class="card-header d-flex justify-content-between align-items-center" id="special-files-header" style="cursor: pointer; padding: 0.5rem 1rem; border-bottom: none; background-color: rgba(0,0,0,0.1);">
+                        <h6 class="mb-0 text-muted" style="font-size: 0.9rem;"><i class="fas fa-photo-video mr-2"></i> Attachments</h6>
+                        <div class="d-flex align-items-center">
+                            <div class="btn-group btn-group-sm mr-2">
+                                <button class="btn btn-outline-info py-0 px-2" id="special-copy-selected" title="Copy Selected Files to Clipboard" style="font-size: 0.7rem;">
+                                    <i class="fas fa-paste"></i> Copy Selected
+                                </button>
+                                <button class="btn btn-outline-secondary py-0 px-2" id="special-select-all"
+                                    aria-label="Select all attachments" title="Select all attachments" style="font-size: 0.7rem;">
+                                    <i class="fas fa-check-double"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary py-0 px-2" id="special-deselect-all"
+                                    aria-label="Deselect all attachments" title="Deselect all attachments" style="font-size: 0.7rem;">
+                                    <i class="fas fa-times-circle"></i>
+                                </button>
+                            </div>
+                            <div class="btn-group mr-3">
+                                <button class="btn btn-sm btn-outline-secondary" id="special-expand-all"
+                                    aria-label="Expand attachment folders" title="Expand attachment folders" style="font-size: 0.7rem;">
+                                    <i class="fas fa-plus-square"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" id="special-collapse-all"
+                                    aria-label="Collapse attachment folders" title="Collapse attachment folders" style="font-size: 0.7rem;">
+                                    <i class="fas fa-minus-square"></i>
+                                </button>
+                            </div>
+                            <span class="badge badge-info mr-2" id="special-files-count">0</span>
+                            <i class="fas fa-chevron-down text-muted" id="special-files-chevron"></i>
+                        </div>
+                    </div>
+                    <div class="card-body p-0" id="special-files-body" style="display: none;">
+                        <div id="special-file-tree" class="p-2" style="max-height: 2000px; overflow-y: auto; background-color: var(--secondary-bg);">
+                            {{ special_file_tree_html | safe }}
+                        </div>
+                    </div>
+                </div>
+
                 <div id="file-tree">{{ file_tree_html | safe }}</div>
-                <div class="loading-spinner">
+                <div class="loading-spinner" role="status" aria-live="polite">
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                     Loading...
                 </div>
 
                 <div id="error-message"></div>
             </div>
-            <div class="col-md-7">
+            <div class="col-md-6">
                 <!-- App Title and Info -->
                 <div class="app-title-container">
-                    <h1 class="app-title"><i class="fas fa-code-branch"></i> Files<span style="color: var(--accent-color);">To</span>AI</h1>
+                    <div class="app-brand">
+                        <h1 class="app-title"><i class="fas fa-code-branch"></i> Files<span style="color: var(--accent-color);">To</span>AI</h1>
+                        <p class="app-subtitle">Clean project context for any AI assistant <span class="release-badge">v{{ app_version }}</span></p>
+                    </div>
                     <!-- Theme Toggle Button -->
                     <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
                         <i class="fas fa-moon"></i>
@@ -342,8 +299,7 @@ __pycache__/</textarea>
                             Large Language Models (LLMs).</p>
                         <h6>Steps:</h6>
                         <ol>
-                            <li><strong>Enter Directory Path:</strong> Type or paste the absolute path to your project's
-                                root directory in the "Directory Path" input field and click "Load".</li>
+                            <li><strong>Choose a project:</strong> Paste its folder path or use Open, then select Load.</li>
                             <li><strong>Configure Settings (Optional):</strong>
                                 <ul>
                                     <li>Use the toggles to respect <code>.gitignore</code> files or enable custom
@@ -372,8 +328,8 @@ __pycache__/</textarea>
                                     <li>Click "Generate Output" to process the selected files. The content will appear
                                         in the "files.txt" area, and a directory structure map will appear in
                                         "project_map.txt".</li>
-                                    <li>"Generate Project Map" creates a map of only the selected files.</li>
-                                    <li>"Generate Full Project Map" creates a map of all files in the loaded directory
+                                    <li>"Map Selected" creates a map of only the selected files.</li>
+                                    <li>"Map All Files" creates a map of all files in the loaded directory
                                         (respecting ignore rules).</li>
                                 </ul>
                             </li>
@@ -486,7 +442,6 @@ __pycache__/</textarea>
             // Initialize Global Hotkey Toggle
             initializeGlobalHotkeyToggle();
 
-            // --- Load initial path ---
             $('#load-path-button').on('click', function () {
                 let absolutePath = $('#path-input').val();
                 if (absolutePath) {
@@ -496,10 +451,70 @@ __pycache__/</textarea>
                 }
             });
 
+            // Handlers for Refresh Tree button
+            $('#refresh-tree-button').on('click', function() {
+                let absolutePath = $('#path-input').val();
+                if (absolutePath) {
+                    loadInitialFileTree(absolutePath);
+                    showToast('Refreshing tree...', 'info');
+                } else {
+                    showToast('No directory path loaded to refresh', 'info');
+                }
+            });
+
+            // Open folder dialog - uses native OS folder picker
+            $('#open-folder-button').on('click', function () {
+                const btn = $(this);
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Open');
+
+                $.ajax({
+                    url: '/api/browse_folder',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({}),
+                    success: function (response) {
+                        if (response.success && response.path) {
+                            $('#path-input').val(response.path);
+                            // Auto-load the selected folder
+                            loadInitialFileTree(response.path);
+                        } else if (response.error) {
+                            // Only show error if it's not a cancel (no folder selected)
+                            if (response.error !== 'No folder selected') {
+                                showToast(response.error, 'error');
+                            }
+                        }
+                    },
+                    error: function (error) {
+                        console.error("AJAX Error:", error);
+                        showToast("Could not open folder browser dialog.", 'error');
+                    },
+                    complete: function () {
+                        btn.prop('disabled', false).html('<i class="fas fa-folder-plus"></i> Open');
+                    }
+                });
+            });
+
             // Enter key in path input triggers load
             $('#path-input').on('keypress', function (e) {
                 if (e.which === 13) {
                     $('#load-path-button').click();
+                }
+            });
+
+            $('#special-files-header').on('click', function(e) {
+                // If the click is on a button (or inside one), don't toggle the section
+                if ($(e.target).closest('button').length) {
+                    return;
+                }
+
+                const body = $('#special-files-body');
+                const chevron = $('#special-files-chevron');
+                if (body.is(':visible')) {
+                    body.slideUp(200);
+                    chevron.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+                } else {
+                    body.slideDown(200);
+                    chevron.removeClass('fa-chevron-down').addClass('fa-chevron-up');
                 }
             });
 
@@ -518,7 +533,8 @@ __pycache__/</textarea>
                         absolute_path: absolutePath,
                         respect_gitignore: $('#gitignore-toggle').is(':checked'),
                         respect_pathignore: usePathignore,
-                        pathignore_input_text: pathignoreInputText // Send raw text
+                        pathignore_input_text: pathignoreInputText, // Send raw text
+                        show_hidden_folders: $('#show-hidden-folders-toggle').is(':checked')
                     }),
                     success: function (response) {
                         if (response.error) {
@@ -526,9 +542,16 @@ __pycache__/</textarea>
                             return;
                         }
                         $('#file-tree').html(response.fileTree);
-                        // Call the new function instead of the old one
+                        $('#special-file-tree').html(response.specialTree);
+
+                        // Update the badge count for special files dynamically
+                        const specialCount = $('#special-file-tree .file').length;
+                        $('#special-files-count').text(specialCount);
+
                         resetTreeEventListeners();
                         updateSelectedCount();
+                        // Apply size limits + auto-hide default extensions
+                        postTreeLoadHook();
                     },
                     error: function (error) {
                         console.error("AJAX Error:", error);
@@ -540,37 +563,8 @@ __pycache__/</textarea>
                 });
             }
 
-            // --- Quick Controls ---
-            $('#select-all').on('click', function () {
-                // Update to select both file and directory checkboxes
-                $('#file-tree .file-checkbox, #file-tree .dir-checkbox').prop('checked', true);
-                updateSelectedCount();
-            });
-
-            $('#deselect-all').on('click', function () {
-                $('#file-tree .file-checkbox, #file-tree .dir-checkbox').prop('checked', false);
-                updateSelectedCount();
-            });
-
-            $('#expand-all').on('click', function () {
-                // First show all directory subtrees
-                $('#file-tree .directory > ul').show();
-
-                // Then make sure all carets are facing down
-                $('#file-tree .expand-button i').each(function () {
-                    $(this).removeClass('fa-caret-right').addClass('fa-caret-down');
-                });
-            });
-
-            $('#collapse-all').on('click', function () {
-                // First hide all directory subtrees
-                $('#file-tree .directory > ul').hide();
-
-                // Then make sure all carets are facing right
-                $('#file-tree .expand-button i').each(function () {
-                    $(this).removeClass('fa-caret-down').addClass('fa-caret-right');
-                });
-            });
+            // Quick controls (select/deselect/expand/collapse) are handled in file-tree.js
+            // with proper oversized-awareness. No duplicates here.
 
             // --- Generate Project Map ---
             $('#generate-project-map').on('click', function () {
@@ -751,112 +745,79 @@ __pycache__/</textarea>
                 });
             });
 
-            // --- Copy to Clipboard using modern API ---
-            $('.copy-button').on('click', function () {
-                const textarea = $(this).closest('.output-section').find('textarea');
-                const textToCopy = textarea.val();
-
-                if (!textToCopy) {
+            // --- Reusable Copy & Download Utility Functions ---
+            function copyToClipboard(text, successMsg = "Copied to clipboard!") {
+                if (!text) {
                     showToast("No content to copy", 'info');
                     return;
                 }
-
                 if (navigator.clipboard) {
-                    navigator.clipboard.writeText(textToCopy)
-                        .then(() => showToast("Copied to clipboard!", 'success'))
+                    navigator.clipboard.writeText(text)
+                        .then(() => showToast(successMsg, 'success'))
                         .catch(err => {
                             console.error('Clipboard write failed:', err);
-                            fallbackCopy(textarea);
+                            fallbackCopy(text, successMsg);
                         });
                 } else {
-                    fallbackCopy(textarea);
+                    fallbackCopy(text, successMsg);
                 }
-            });
+            }
 
-            // --- Copy Stats Button ---
-            $('.copy-stats-button').on('click', function () {
-                // Collect stats data
-                const fileSize = $('#output-size').text();
-                const charCount = $('#char-count').text();
-                const tokenCount = $('#token-count').text();
-                const selectedFilesCount = $('#selected-files-count').text();
-
-                // Format stats data
-                const statsText = `Output Statistics:
-Combined Files Size: ${fileSize}
-Character Count: ${charCount}
-Estimated Tokens: ${tokenCount}
-Selected Files: ${selectedFilesCount}`;
-
-                // Copy to clipboard
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(statsText)
-                        .then(() => showToast("Statistics copied to clipboard!", 'success'))
-                        .catch(err => {
-                            console.error('Clipboard write failed:', err);
-                            // Create temporary textarea for fallback
-                            const tempTextarea = $('<textarea>').val(statsText).appendTo('body').select();
-                            fallbackCopy(tempTextarea);
-                            tempTextarea.remove();
-                        });
-                } else {
-                    const tempTextarea = $('<textarea>').val(statsText).appendTo('body').select();
-                    fallbackCopy(tempTextarea);
+            function fallbackCopy(text, successMsg) {
+                const tempTextarea = $('<textarea>').val(text).appendTo('body').select();
+                try {
+                    if (document.execCommand('copy')) {
+                        showToast(successMsg, 'success');
+                    } else {
+                        throw new Error('Copy command failed');
+                    }
+                } catch (err) {
+                    showToast("Failed to copy. Please select and copy manually.", 'error');
+                } finally {
                     tempTextarea.remove();
                 }
-            });
+            }
 
-            // --- Copy All Content Button ---
-            $('#copy-all-button').on('click', function () {
-                const combinedContent = generateCombinedContent();
-
-                if (!combinedContent) {
-                    showToast("No content to copy", 'info');
-                    return;
-                }
-
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(combinedContent)
-                        .then(() => showToast("All content copied to clipboard!", 'success'))
-                        .catch(err => {
-                            console.error('Clipboard write failed:', err);
-                            const tempTextarea = $('<textarea>').val(combinedContent).appendTo('body').select();
-                            fallbackCopy(tempTextarea);
-                            tempTextarea.remove();
-                        });
-                } else {
-                    const tempTextarea = $('<textarea>').val(combinedContent).appendTo('body').select();
-                    fallbackCopy(tempTextarea);
-                    tempTextarea.remove();
-                }
-            });
-
-            // --- Download All Content Button ---
-            $('#download-all-button').on('click', function () {
-                const combinedContent = generateCombinedContent();
-
-                if (!combinedContent) {
+            function downloadTextFile(filename, content) {
+                if (!content) {
                     showToast("No content to download", 'info');
                     return;
                 }
-
-                // Create a blob and download it
-                const blob = new Blob([combinedContent], { type: 'text/plain' });
+                const blob = new Blob([content], { type: 'text/plain' });
                 const url = URL.createObjectURL(blob);
-
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = "project_content.txt";
+                a.download = filename;
                 document.body.appendChild(a);
                 a.click();
-
-                // Clean up
                 setTimeout(() => {
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
                 }, 100);
+                showToast(`Downloading ${filename}`, 'success');
+            }
 
-                showToast("Downloading complete project content", 'success');
+            // --- Click Handlers for Copying ---
+            $('.copy-button').on('click', function () {
+                copyToClipboard($(this).closest('.output-section').find('textarea').val());
+            });
+
+            $('.copy-stats-button').on('click', function () {
+                const statsText = `Output Statistics:\nCombined Files Size: ${$('#output-size').text()}\nCharacter Count: ${$('#char-count').text()}\nEstimated Tokens: ${$('#token-count').text()}\nSelected Files: ${$('#selected-files-count').text()}`;
+                copyToClipboard(statsText, "Statistics copied to clipboard!");
+            });
+
+            $('#copy-all-button').on('click', function () {
+                copyToClipboard(generateCombinedContent(), "All content copied to clipboard!");
+            });
+
+            // --- Click Handlers for Downloading ---
+            $('.download-button').on('click', function () {
+                downloadTextFile($(this).data('filename'), $(this).closest('.output-section').find('textarea').val());
+            });
+
+            $('#download-all-button').on('click', function () {
+                downloadTextFile("project_content.txt", generateCombinedContent());
             });
 
             // Helper function to generate combined content
@@ -864,82 +825,18 @@ Selected Files: ${selectedFilesCount}`;
                 const filesContent = $('#files-output textarea').val();
                 const projectMapContent = $('#project-map-output textarea').val();
 
-                // Get stats data
-                const fileSize = $('#output-size').text();
-                const charCount = $('#char-count').text();
-                const tokenCount = $('#token-count').text();
-                const selectedFilesCount = $('#selected-files-count').text();
-
-                // Build the combined content with section headers and dividers
                 let combinedContent = "";
+                if (filesContent) combinedContent += "========== FILES ==========\n\n" + filesContent + "\n\n";
+                if (projectMapContent) combinedContent += "========== PROJECT MAP ==========\n\n" + projectMapContent + "\n\n";
 
-                // Add Files section if available
-                if (filesContent) {
-                    combinedContent += "========== FILES ==========\n\n";
-                    combinedContent += filesContent;
-                    combinedContent += "\n\n";
-                }
-
-                // Add Project Map section if available
-                if (projectMapContent) {
-                    combinedContent += "========== PROJECT MAP ==========\n\n";
-                    combinedContent += projectMapContent;
-                    combinedContent += "\n\n";
-                }
-
-                // Add Statistics section
                 combinedContent += "========== STATISTICS ==========\n\n";
-                combinedContent += `Combined Files Size: ${fileSize}\n`;
-                combinedContent += `Character Count: ${charCount}\n`;
-                combinedContent += `Estimated Tokens: ${tokenCount}\n`;
-                combinedContent += `Selected Files: ${selectedFilesCount}\n`;
+                combinedContent += `Combined Files Size: ${$('#output-size').text()}\n`;
+                combinedContent += `Character Count: ${$('#char-count').text()}\n`;
+                combinedContent += `Estimated Tokens: ${$('#token-count').text()}\n`;
+                combinedContent += `Selected Files: ${$('#selected-files-count').text()}\n`;
 
                 return combinedContent;
             }
-
-            function fallbackCopy(textarea) {
-                textarea.select();
-                try {
-                    const successful = document.execCommand('copy');
-                    if (successful) {
-                        showToast("Copied to clipboard!", 'success');
-                    } else {
-                        throw new Error('Copy command failed');
-                    }
-                } catch (err) {
-                    showToast("Failed to copy. Please select and copy manually.", 'error');
-                }
-            }
-
-            // --- Download functionality ---
-            $('.download-button').on('click', function () {
-                const textarea = $(this).closest('.output-section').find('textarea');
-                const content = textarea.val();
-                const filename = $(this).data('filename');
-
-                if (!content) {
-                    showToast("No content to download", 'info');
-                    return;
-                }
-
-                // Create a blob and download it
-                const blob = new Blob([content], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-
-                // Clean up
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 100);
-
-                showToast(`Downloading ${filename}`, 'success');
-            });
 
             // Size slider
             $('#size-slider').on('input', function () {
@@ -973,33 +870,23 @@ Selected Files: ${selectedFilesCount}`;
 
                 $('.toast-container').append(toast);
 
-                // Trigger animation
                 setTimeout(() => {
                     toast.addClass('show');
-                    // Debug: log toast dimensions
-                    console.log('Toast dimensions:', {
-                        height: toast.outerHeight(),
-                        innerHeight: toast.height(),
-                        padding: toast.css('padding'),
-                        lineHeight: toast.css('line-height'),
-                        fontSize: toast.css('font-size'),
-                        computedStyles: window.getComputedStyle(toast[0])
-                    });
                 }, 10);
 
-                // Auto remove after delay
                 setTimeout(() => {
                     toast.removeClass('show');
                     setTimeout(() => toast.remove(), 300);
                 }, 3000);
             }
+            window.showToast = showToast;
 
             // Show/hide loading spinner
             function showLoading(show) {
                 if (show) {
-                    $('.loading-spinner').fadeIn(200);
+                    $('.loading-spinner').stop(true, true).fadeIn(200, function() { $(this).css('display', 'flex'); });
                 } else {
-                    $('.loading-spinner').fadeOut(200);
+                    $('.loading-spinner').stop(true, true).fadeOut(200);
                 }
             }
 

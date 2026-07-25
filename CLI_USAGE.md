@@ -2,24 +2,18 @@
 
 ## Installation
 
-### Install from source (development):
+### Install from PyPI
+
 ```bash
-# Clone the repository
+python -m pip install --upgrade filestoai
+```
+
+### Install from source for development
+
+```bash
 git clone https://github.com/mystxcal/FilesToAI
 cd FilesToAI
-
-# Install in editable mode
-pip install -e .
-```
-
-### Install as a package:
-```bash
-pip install .
-```
-
-### Install for development:
-```bash
-pip install -r requirements.txt
+python -m pip install -e .
 ```
 
 ## CLI Usage

@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
 """Command-line interface for FilesToAI."""
+
 import argparse
 import sys
 import os
 import logging
-from pathlib import Path
 import pyperclip
-from core import (
-    collect_files,
-    generate_output_content,
-    parse_ignore_patterns,
-)
+
+try:
+    from .core import collect_files, generate_output_content
+except ImportError:
+    from core import collect_files, generate_output_content
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,7 @@ logger = logging.getLogger(__name__)
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
-        description='FilesToAI - Export your codebase for AI consumption',
+        description="FilesToAI - Export your codebase for AI consumption",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -37,158 +36,161 @@ Examples:
   filestoai . --project-map-only       # Only generate project map
   filestoai --server                   # Start web interface
   filestoai --server --port 8000       # Start web interface on custom port
-        """
+        """,
     )
-    
+
     # Positional argument
     parser.add_argument(
-        'directory',
-        nargs='?',
-        default='.',
-        help='Directory to process (default: current directory)'
+        "directory",
+        nargs="?",
+        default=".",
+        help="Directory to process (default: current directory)",
     )
-    
+
     # Optional arguments
     parser.add_argument(
-        '-gi', '--gitignore',
-        action='store_true',
-        help='Respect .gitignore files'
+        "-gi", "--gitignore", action="store_true", help="Respect .gitignore files"
     )
-    
+
     parser.add_argument(
-        '-s', '--size',
+        "-s",
+        "--size",
         type=int,
         default=100,
-        metavar='KB',
-        help='Maximum file size in KB (default: 100)'
+        metavar="KB",
+        help="Maximum file size in KB (default: 100)",
     )
-    
+
     parser.add_argument(
-        '-i', '--ignore',
+        "-i",
+        "--ignore",
         type=str,
-        default='',
-        metavar='PATTERNS',
-        help='Comma-separated ignore patterns (e.g., "*.log,node_modules/,*.tmp")'
+        default="",
+        metavar="PATTERNS",
+        help='Comma-separated ignore patterns (e.g., "*.log,node_modules/,*.tmp")',
     )
-    
+
     parser.add_argument(
-        '-o', '--output',
+        "-o",
+        "--output",
         type=str,
-        metavar='FILE',
-        help='Output file path (default: copy to clipboard)'
+        metavar="FILE",
+        help="Output file path (default: copy to clipboard)",
     )
-    
+
     parser.add_argument(
-        '--no-copy',
-        action='store_true',
-        help='Do not copy to clipboard (only works with --output)'
+        "--no-copy",
+        action="store_true",
+        help="Do not copy to clipboard (only works with --output)",
     )
-    
+
     parser.add_argument(
-        '--include-binary',
-        action='store_true',
-        help='Include binary files in output (as placeholders)'
+        "--include-binary",
+        action="store_true",
+        help="Include binary files in output (as placeholders)",
     )
-    
+
     parser.add_argument(
-        '--project-map-only',
-        action='store_true',
-        help='Only generate project map, skip file contents'
+        "--project-map-only",
+        action="store_true",
+        help="Only generate project map, skip file contents",
     )
-    
+
     parser.add_argument(
-        '--files-only',
-        action='store_true',
-        help='Only generate file contents, skip project map'
+        "--files-only",
+        action="store_true",
+        help="Only generate file contents, skip project map",
     )
-    
+
     parser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        help='Enable verbose output'
+        "-v", "--verbose", action="store_true", help="Enable verbose output"
     )
-    
+
     parser.add_argument(
-        '--list-files',
-        action='store_true',
-        help='List files that would be processed and exit'
+        "--list-files",
+        action="store_true",
+        help="List files that would be processed and exit",
     )
-    
+
     parser.add_argument(
-        '--server',
-        action='store_true',
-        help='Start the web interface server (Flask app)'
+        "--server",
+        action="store_true",
+        help="Start the web interface server (Flask app)",
     )
-    
+
     parser.add_argument(
-        '--port',
+        "--port",
         type=int,
         default=5023,
-        metavar='PORT',
-        help='Port for web server (default: 5023, only works with --server)'
+        metavar="PORT",
+        help="Port for web server (default: 5023, only works with --server)",
     )
-    
+
     args = parser.parse_args()
-    
+
     # Set logging level
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
-    
+
     # Handle --server mode
     if args.server:
         logger.info(f"Starting FilesToAI web server on port {args.port}...")
         logger.info(f"Open your browser to: http://127.0.0.1:{args.port}")
-        
+
         try:
-            # Import Flask app
-            from app import app as flask_app
-            
-            # Run the server
-            flask_app.run(debug=True, port=args.port)
-        except ImportError as e:
-            logger.error(f"Error: Could not import Flask app. Make sure all dependencies are installed.")
-            logger.error(f"Run: pip install -r requirements.txt")
+            try:
+                from .app import app as flask_app
+            except ImportError:
+                from app import app as flask_app
+
+            flask_app.run(
+                host="127.0.0.1",
+                port=args.port,
+                debug=False,
+                use_reloader=False,
+            )
+        except ImportError:
+            logger.error(
+                "Could not import the web app. Reinstall FilesToAI and try again."
+            )
             sys.exit(1)
         except Exception as e:
             logger.error(f"Error starting server: {e}")
             sys.exit(1)
-        
-        # Server mode exits here
+
         return
-    
+
     # Resolve directory path
     directory = os.path.abspath(args.directory)
-    
+
     if not os.path.exists(directory):
         logger.error(f"Error: Directory '{directory}' does not exist")
         sys.exit(1)
-    
+
     if not os.path.isdir(directory):
         logger.error(f"Error: '{directory}' is not a directory")
         sys.exit(1)
-    
+
     logger.info(f"Processing directory: {directory}")
-    
+
     # Parse custom ignore patterns
     custom_patterns = []
     if args.ignore:
-        custom_patterns = [p.strip() for p in args.ignore.split(',') if p.strip()]
+        custom_patterns = [p.strip() for p in args.ignore.split(",") if p.strip()]
         logger.info(f"Custom ignore patterns: {custom_patterns}")
-    
+
     # Collect files
     logger.info("Collecting files...")
     files = collect_files(
-        directory,
-        respect_gitignore=args.gitignore,
-        custom_patterns=custom_patterns
+        directory, respect_gitignore=args.gitignore, custom_patterns=custom_patterns
     )
-    
+
     if not files:
         logger.warning("No files found to process")
         sys.exit(0)
-    
+
     logger.info(f"Found {len(files)} files")
-    
+
     # If --list-files, just print and exit
     if args.list_files:
         print(f"\nFiles to be processed ({len(files)} total):\n")
@@ -198,65 +200,62 @@ Examples:
                 size = os.path.getsize(file_path)
                 size_str = format_file_size(size)
                 print(f"  {file} ({size_str})")
-            except:
+            except OSError:
                 print(f"  {file}")
         sys.exit(0)
-    
+
     # Generate output
     logger.info("Generating output...")
     result = generate_output_content(
-        files,
-        directory,
-        max_size_kb=args.size,
-        include_binary=args.include_binary
+        files, directory, max_size_kb=args.size, include_binary=args.include_binary
     )
-    
+
     # Build final output
     output_parts = []
-    
+
     if args.project_map_only:
         output_parts.append("========== PROJECT MAP ==========\n")
-        output_parts.append(result['project_map_txt'])
+        output_parts.append(result["project_map_txt"])
     elif args.files_only:
         output_parts.append("========== FILES ==========\n")
-        output_parts.append(result['files_txt'])
+        output_parts.append(result["files_txt"])
     else:
         # Include both
         output_parts.append("========== FILES ==========\n")
-        output_parts.append(result['files_txt'])
+        output_parts.append(result["files_txt"])
         output_parts.append("\n========== PROJECT MAP ==========\n")
-        output_parts.append(result['project_map_txt'])
-    
+        output_parts.append(result["project_map_txt"])
+
     # Add statistics
-    stats = result['stats']
+    stats = result["stats"]
     output_parts.append("\n========== STATISTICS ==========\n")
     output_parts.append(f"Total Files: {stats['total_files']}\n")
     output_parts.append(f"Character Count: {stats['character_count']:,}\n")
     output_parts.append(f"Estimated Tokens: {stats['estimated_tokens']:,}\n")
     output_parts.append(f"Skipped (size): {stats['skipped_files']}\n")
     output_parts.append(f"Binary Files: {stats['binary_files']}\n")
-    
-    final_output = ''.join(output_parts)
-    
+
+    final_output = "".join(output_parts)
+
     # Display statistics
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("STATISTICS")
-    print("="*50)
+    print("=" * 50)
     print(f"Total Files: {stats['total_files']}")
     print(f"Character Count: {stats['character_count']:,}")
     print(f"Estimated Tokens: {stats['estimated_tokens']:,}")
     print(f"Skipped (size): {stats['skipped_files']}")
     print(f"Binary Files: {stats['binary_files']}")
-    print("="*50 + "\n")
-    
+    print("=" * 50 + "\n")
+
     # Handle output
     if args.output:
         # Save to file
         try:
-            with open(args.output, 'w', encoding='utf-8') as f:
+            with open(args.output, "w", encoding="utf-8") as f:
                 f.write(final_output)
             logger.info(f"Output saved to: {args.output}")
-            
+
             # Also copy to clipboard unless --no-copy is set
             if not args.no_copy:
                 try:
@@ -290,6 +289,5 @@ def format_file_size(size_bytes):
         return f"{size_bytes / (1024 * 1024):.1f} MB"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-

@@ -1,8 +1,7 @@
 include README.md
 include LICENSE
 include requirements.txt
-include filestoai_config.json
 recursive-include templates *.html
 recursive-include static *.css *.js
-recursive-include assets *.png *.jpg *.jpeg *.gif
+recursive-include assets *.png
 
