@@ -295,7 +295,7 @@ There are several good tools in this space and they make different trades.
 
 | | Language / runtime | Local interface | Install |
 |---|---|---|---|
-| **FilesToAI** | Rust, single binary | Yes, built in | `cargo install` |
+| **FilesToAI** | Rust, single binary | Yes, built in | `cargo install --git` |
 | [repomix](https://github.com/yamadashy/repomix) | TypeScript | No | Node / npm |
 | [code2prompt](https://github.com/mufeedvh/code2prompt) | Rust | No | `cargo install` |
 | [gitingest](https://github.com/coderamp-labs/gitingest) | Python | Hosted web app | Python / pip |
@@ -320,7 +320,7 @@ cd ui && npm ci && npm run build   # compiles the interface into crates/server/d
 cargo build --release
 ```
 
-`crates/server/dist` is committed, which is what lets `cargo install filestoai`
+`crates/server/dist` is committed, which is what lets the Git install above
 work with no Node toolchain anywhere in sight. Rebuild it whenever `ui/`
 changes; CI fails if the committed build and a fresh one differ.
 
