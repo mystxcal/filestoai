@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/banner-dark.gif">
+  <img alt="FilesToAI turns a selected project tree into one measured, model-ready context document" src="docs/assets/banner.gif" width="100%">
+</picture>
+
 # FilesToAI
 
 Turn a project on disk into one block of text you can paste into a language

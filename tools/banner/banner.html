@@ -1,0 +1,266 @@
+<meta charset="utf-8">
+<title>FilesToAI — project to context</title>
+<style>
+  html,body{margin:0;width:100%;height:100%;display:grid;place-items:center;background:#090a0c}
+  canvas{display:block;width:1280px;height:400px}
+</style>
+<canvas id="banner"></canvas>
+<script>
+"use strict";
+
+/*
+  The product is the picture.
+
+  An untidy project tree enters from the left. Files are selected, ignored or
+  named as attachments. The selected text crosses a measured aperture and
+  resolves into one structured context document on the right. The scene is
+  stateless: every frame is reconstructed from `t`, so the loop is exact.
+*/
+
+const W = 1280, H = 400, SS = 2, LOOP = 10;
+const cv = document.getElementById("banner");
+cv.width = W * SS;
+cv.height = H * SS;
+const g = cv.getContext("2d", { alpha: false });
+g.scale(SS, SS);
+
+const THEMES = {
+  dark: {
+    bg: "#0B0C0F", panel: "#111319", panel2: "#151820", line: "#272C37",
+    faint: "#4A5262", mute: "#8790A2", text: "#F3F5FA", blue: "#87A6FF",
+    blue2: "#4F70FF", blue3: "#C6D3FF", red: "#F08080", green: "#75D6B1",
+    shadow: "rgba(0,0,0,.46)", glow: "rgba(95,126,255,.25)", paper: "#E9EDFA",
+    paperInk: "#27314B", grid: "rgba(135,166,255,.045)", white: "#FFFFFF"
+  },
+  light: {
+    bg: "#F7F8FC", panel: "#FFFFFF", panel2: "#F1F3FA", line: "#DCE1EE",
+    faint: "#A1A9B8", mute: "#667085", text: "#111521", blue: "#4969E9",
+    blue2: "#3157FF", blue3: "#8AA4FF", red: "#C85B5B", green: "#2D9C76",
+    shadow: "rgba(36,53,89,.13)", glow: "rgba(79,112,255,.16)", paper: "#FFFFFF",
+    paperInk: "#25304A", grid: "rgba(49,87,255,.045)", white: "#FFFFFF"
+  }
+};
+let P = THEMES.dark;
+
+const clamp = x => Math.max(0, Math.min(1, x));
+const sm = (a, b, t) => { const x = clamp((t-a)/(b-a)); return x*x*(3-2*x); };
+const ease = (a, b, t) => { const x = clamp((t-a)/(b-a)); return 1-Math.pow(1-x,3); };
+const mix = (a,b,k) => a+(b-a)*k;
+const alpha = (value, fn) => { if(value <= .002) return; const old=g.globalAlpha; g.globalAlpha=old*value; fn(); g.globalAlpha=old; };
+
+function box(x,y,w,h,color){ g.fillStyle=color; g.fillRect(x,y,w,h); }
+function line(x1,y1,x2,y2,color,width=1){ g.strokeStyle=color; g.lineWidth=width; g.beginPath(); g.moveTo(x1,y1); g.lineTo(x2,y2); g.stroke(); }
+function rr(x,y,w,h,r){
+  r=Math.min(r,w/2,h/2); g.beginPath(); g.moveTo(x+r,y);
+  g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r);
+  g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath();
+}
+function fillRR(x,y,w,h,r,color){ g.fillStyle=color; rr(x,y,w,h,r); g.fill(); }
+function strokeRR(x,y,w,h,r,color,width=1){ g.strokeStyle=color; g.lineWidth=width; rr(x,y,w,h,r); g.stroke(); }
+function text(value,x,y,size=12,color=P.text,weight=500,align="left",family="ui-monospace, SFMono-Regular, Menlo, monospace"){
+  g.font=`${weight} ${size}px ${family}`; g.fillStyle=color; g.textAlign=align; g.textBaseline="alphabetic"; g.fillText(value,x,y); g.textAlign="left";
+}
+function hex(x,y,size,color){
+  g.strokeStyle=color; g.lineWidth=1.2; g.beginPath();
+  for(let i=0;i<6;i++){ const a=Math.PI/3*i-Math.PI/6; const px=x+Math.cos(a)*size, py=y+Math.sin(a)*size; i?g.lineTo(px,py):g.moveTo(px,py); }
+  g.closePath(); g.stroke();
+}
+function check(x,y,on,amount=1){
+  fillRR(x,y,14,14,4,on?P.blue2:P.panel2); strokeRR(x+.5,y+.5,13,13,3.5,on?P.blue2:P.faint,1);
+  if(on) alpha(amount,()=>{ g.strokeStyle=P.white; g.lineWidth=1.8; g.lineCap="round"; g.lineJoin="round"; g.beginPath(); g.moveTo(x+3.5,y+7.4); g.lineTo(x+6.2,y+10); g.lineTo(x+11,y+4.5); g.stroke(); });
+}
+function fileIcon(x,y,color=P.blue){
+  g.strokeStyle=color; g.lineWidth=1.2; g.beginPath(); g.moveTo(x,y); g.lineTo(x+7,y); g.lineTo(x+11,y+4); g.lineTo(x+11,y+14); g.lineTo(x,y+14); g.closePath(); g.stroke();
+  line(x+7,y,x+7,y+4,color,1.2); line(x+7,y+4,x+11,y+4,color,1.2);
+}
+function folderIcon(x,y,color=P.blue){
+  g.strokeStyle=color; g.lineWidth=1.2; g.beginPath(); g.moveTo(x,y+3); g.lineTo(x+5,y+3); g.lineTo(x+7,y+5); g.lineTo(x+15,y+5); g.lineTo(x+15,y+14); g.lineTo(x,y+14); g.closePath(); g.stroke();
+}
+
+const FILES = [
+  {name:"src", depth:0, folder:true, state:"on", tokens:"12/12"},
+  {name:"main.rs", depth:1, state:"on", tokens:"~1.8k"},
+  {name:"scan.rs", depth:1, state:"on", tokens:"~4.1k"},
+  {name:"render.rs", depth:1, state:"on", tokens:"~2.7k"},
+  {name:"README.md", depth:0, state:"on", tokens:"~3.2k"},
+  {name:"target", depth:0, folder:true, state:"ignore", tokens:"ignored"},
+  {name:"diagram.png", depth:0, state:"attach", tokens:"attachment"},
+];
+
+function ground(){
+  box(0,0,W,H,P.bg);
+  g.strokeStyle=P.grid; g.lineWidth=1; g.beginPath();
+  for(let x=0;x<W;x+=32){g.moveTo(x+.5,0);g.lineTo(x+.5,H)}
+  for(let y=0;y<H;y+=32){g.moveTo(0,y+.5);g.lineTo(W,y+.5)}
+  g.stroke();
+  const grad=g.createLinearGradient(0,0,W,0); grad.addColorStop(0,P.bg); grad.addColorStop(.5,"rgba(0,0,0,0)"); grad.addColorStop(1,P.bg); g.fillStyle=grad; g.fillRect(0,0,W,H);
+}
+
+function identity(t){
+  const x=44;
+  fillRR(x,40,38,38,10,P.blue2); fileIcon(x+13,52,P.white);
+  text("FilesToAI",x,137,43,P.text,720,"left","Inter, Segoe UI, sans-serif");
+  text("PROJECT  →  CONTEXT",x+2,166,11,P.blue,650);
+  text("one binary · one clean handoff",x+2,190,12,P.mute,500,"left","Inter, Segoe UI, sans-serif");
+
+  line(x,232,x+270,232,P.line);
+  text("LIVE MEASURE",x,260,10,P.mute,650);
+  const measure=sm(4.5,6.7,t);
+  const tokens=Math.round(mix(0,11842,measure));
+  text(`${tokens.toLocaleString()} tokens`,x,299,25,P.text,650,"left","Inter, Segoe UI, sans-serif");
+  text("28 files · 84 KB",x,323,11,P.mute,500);
+  fillRR(x,347,184,3,1.5,P.line);
+  fillRR(x,347,184*measure,3,1.5,P.blue2);
+  text("within context",x+195,351,10,measure>.98?P.green:P.faint,600);
+}
+
+function treePanel(t){
+  const x=360,y=34,w=350,h=332;
+  g.save(); g.shadowColor=P.shadow; g.shadowBlur=28; g.shadowOffsetY=10; fillRR(x,y,w,h,16,P.panel); g.restore();
+  strokeRR(x+.5,y+.5,w-1,h-1,15.5,P.line);
+  text("PROJECT",x+22,y+32,10,P.mute,700);
+  fillRR(x+250,y+15,74,28,8,P.panel2); text("All",x+271,y+34,11,P.text,580);
+
+  const reveal=sm(.25,1.55,t);
+  const select=sm(1.25,3.2,t);
+  const filter=sm(2.9,4.4,t);
+  line(x+22,y+54,x+w-22,y+54,P.line);
+
+  FILES.forEach((file,index)=>{
+    const yy=y+74+index*34;
+    alpha(sm(.2+index*.12,.7+index*.12,t)*reveal,()=>{
+      if(file.state==="on") alpha(.10+select*.09,()=>fillRR(x+10,yy-17,w-20,28,7,P.blue));
+      const dim=file.state==="ignore"?mix(1,.35,filter):1;
+      alpha(dim,()=>{
+        check(x+22+file.depth*20,yy-10,file.state==="on",select);
+        const ix=x+46+file.depth*20;
+        file.folder?folderIcon(ix,yy-10):fileIcon(ix+2,yy-12);
+        text(file.name,ix+23,yy,12,file.state==="ignore"?P.faint:P.text,520,"left","Inter, Segoe UI, sans-serif");
+        text(file.tokens,x+w-22,yy,10,file.state==="on"?P.mute:(file.state==="attach"?P.blue:P.faint),500,"right");
+      });
+      if(file.state==="ignore") alpha(filter,()=>{ line(x+22,yy-4,x+w-20,yy-4,P.red,1); });
+      if(file.state==="attach") alpha(filter,()=>{ fillRR(x+w-99,yy-15,77,20,7,P.panel2); text("attachment",x+w-60,yy,9,P.blue,600,"center"); });
+    });
+  });
+
+  const bottom=y+h-43;
+  line(x+1,bottom,x+w-1,bottom,P.line);
+  text("gitignore aware",x+22,bottom+27,10,P.mute,550);
+  text("selected 5",x+w-22,bottom+27,10,P.blue,650,"right");
+}
+
+function aperture(t){
+  const x=744, top=66, bottom=334;
+  const active=sm(3.15,4.3,t);
+  alpha(.4+active*.6,()=>{
+    g.save(); g.shadowColor=P.glow; g.shadowBlur=active*30;
+    fillRR(x,top,14,bottom-top,7,P.blue2); g.restore();
+  });
+  for(let i=0;i<10;i++){
+    const y=top+14+i*26;
+    line(x-9,y,x-2,y,P.faint); line(x+16,y,x+23,y,P.faint);
+  }
+  text("FILTER",x+7,49,9,P.blue,700,"center");
+  text("MEASURE",x+7,360,9,P.blue,700,"center");
+
+  // Selected file packets converge, cross once, then disappear into the page.
+  for(let i=0;i<5;i++){
+    const start=3.45+i*.22, end=start+1.45;
+    const p=ease(start,end,t);
+    const sx=676, sy=112+i*34;
+    const ex=840, ey=112+i*27;
+    alpha(sm(start,start+.12,t)*(1-sm(end-.1,end,t)),()=>{
+      const px=mix(sx,ex,p), py=mix(sy,ey,p);
+      fillRR(px-18,py-4,36,8,3,P.blue3);
+      box(px-12,py-2,18+6*(i%3),4,P.blue2);
+    });
+  }
+}
+
+function contextPanel(t){
+  const x=792,y=34,w=444,h=332;
+  g.save(); g.shadowColor=P.shadow; g.shadowBlur=28; g.shadowOffsetY=10; fillRR(x,y,w,h,16,P.panel); g.restore();
+  strokeRR(x+.5,y+.5,w-1,h-1,15.5,P.line);
+  text("MODEL-READY CONTEXT",x+22,y+32,10,P.mute,700);
+  fillRR(x+w-116,y+14,92,28,8,P.panel2);
+  text("XML",x+w-91,y+33,10,P.blue,700);
+  text("MD",x+w-52,y+33,10,P.faint,550);
+  line(x+22,y+54,x+w-22,y+54,P.line);
+
+  const form=sm(4.15,6.65,t);
+  const proof=sm(6.6,7.8,t);
+  const rows=[
+    {indent:0,w:154,c:P.blue}, {indent:16,w:92,c:P.paperInk},
+    {indent:16,w:266,c:P.paperInk}, {indent:16,w:214,c:P.paperInk},
+    {indent:0,w:124,c:P.blue}, {indent:16,w:302,c:P.paperInk},
+    {indent:16,w:282,c:P.paperInk}, {indent:16,w:238,c:P.paperInk},
+    {indent:0,w:112,c:P.blue}, {indent:0,w:76,c:P.blue},
+  ];
+  g.save(); g.shadowColor=P.shadow; g.shadowBlur=18; g.shadowOffsetY=8; fillRR(x+22,y+73,w-44,210,8,P.paper); g.restore();
+  rows.forEach((row,index)=>{
+    const local=sm(4.2+index*.17,4.8+index*.17,t)*form;
+    alpha(local,()=>{
+      fillRR(x+40+row.indent,y+94+index*17,row.w*local,4,2,row.c);
+      if(index===0||index===4||index===8||index===9) text(index===0?"<context>":index===4?"<file>":index===8?"</file>":"</context>",x+40+row.indent,y+99+index*17,8,P.blue,650);
+    });
+  });
+  alpha(proof,()=>{
+    fillRR(x+22,y+299,132,18,6,P.panel2); text("5 files",x+34,y+312,9,P.text,600);
+    fillRR(x+162,y+299,134,18,6,P.panel2); text("~11.8k tokens",x+174,y+312,9,P.text,600);
+    fillRR(x+w-99,y+293,75,30,8,P.blue2);
+    text("COPY",x+w-61,y+313,10,P.white,750,"center");
+  });
+  alpha(sm(7.65,7.95,t)*(1-sm(8.55,8.85,t)),()=>{
+    g.save(); g.shadowColor=P.glow; g.shadowBlur=24; strokeRR(x+20,y+71,w-40,214,9,P.blue,2); g.restore();
+    fillRR(x+w-142,y+244,100,24,8,P.green); text("copied",x+w-92,y+260,10,P.white,700,"center");
+  });
+}
+
+function packetTrails(t){
+  const active=sm(3.2,3.7,t)*(1-sm(6.1,6.6,t));
+  alpha(active*.52,()=>{
+    for(let i=0;i<4;i++){
+      const phase=(t*.45+i*.24)%1;
+      const x=mix(704,790,phase);
+      line(x,92+i*57,x+22,92+i*57,P.blue,1.2);
+    }
+  });
+}
+
+function chrome(t){
+  // Crop marks and a tiny stage rail make the piece read as an instrument.
+  const m=16,k=10;
+  [[m,m,1,1],[W-m,m,-1,1],[m,H-m,1,-1],[W-m,H-m,-1,-1]].forEach(([x,y,sx,sy])=>{
+    line(x,y,x+sx*k,y,P.faint); line(x,y,x,y+sy*k,P.faint);
+  });
+  const stages=["WALK","SELECT","MEASURE","FRAME","COPY"];
+  const progress=clamp(t/8.1);
+  const x0=360,x1=1236,y=382;
+  line(x0,y,x1,y,P.line);
+  stages.forEach((stage,index)=>{
+    const x=mix(x0,x1,index/(stages.length-1));
+    fillRR(x-2.5,y-2.5,5,5,2.5,index/4<=progress?P.blue2:P.line);
+    text(stage,x,y-9,8,index/4<=progress?P.blue:P.faint,650,"center");
+  });
+}
+
+function render(t){
+  // The final second clears the work while keeping the instrument in place.
+  const visible=1-sm(8.9,9.78,t);
+  ground();
+  alpha(visible,()=>{ identity(t); treePanel(t); packetTrails(t); aperture(t); contextPanel(t); chrome(t); });
+  // Cross-loop emergence is an opacity reveal, so frame 0 and frame LOOP agree.
+  const enter=sm(.02,.23,t);
+  alpha(1-enter,()=>box(0,0,W,H,P.bg));
+}
+
+window.__setTheme = theme => { P=THEMES[theme]||THEMES.dark; render(8.15); };
+window.__step = t => render(((t%LOOP)+LOOP)%LOOP);
+window.__ready = true;
+
+if(!window.__manual){
+  const start=performance.now();
+  function loop(now){ render(((now-start)/1000)%LOOP); requestAnimationFrame(loop); }
+  requestAnimationFrame(loop);
+} else render(8.15);
+</script>
