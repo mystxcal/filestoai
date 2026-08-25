@@ -41,7 +41,7 @@ before you commit to it, and do it in one command.
 ## Installing
 
 ```console
-cargo install filestoai
+cargo install --git https://github.com/mystxcal/filestoai --locked filestoai
 ```
 
 That is the only step. The interface ships inside the binary, so there is no
