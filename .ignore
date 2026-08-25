@@ -1,0 +1,6 @@
+# Read by FilesToAI (and ripgrep, and fd) but not by git.
+#
+# crates/server/dist is committed on purpose — the server crate embeds it, so
+# `cargo install` has to work without Node. It is still a minified bundle, and
+# nobody wants 150k tokens of it in a prompt about this repository.
+crates/server/dist/

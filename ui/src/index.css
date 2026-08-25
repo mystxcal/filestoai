@@ -1,0 +1,206 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ─────────────────────────────────────────────────────────────
+   Three materials, after interior.dev.
+
+     bezel  — the frame everything sits in   (furthest back)
+     panel  — the lifted card                (where content lives)
+     well   — the recessed slot              (where things go in)
+
+   Depth is real: wells are cut in, panels are lifted out. Never a
+   flat border standing in for structure.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  --bezel: #f7f7f6;
+  --panel: #ffffff;
+  --well: #ffffff;
+  --sub: #fafafa;
+
+  --hairline: rgba(0, 0, 0, 0.14);
+  --hairline-strong: rgba(0, 0, 0, 0.26);
+
+  --ink: #131313;
+  --ink-2: #454545;
+  --ink-3: #6e6e6e;
+
+  --accent: #4568ff;
+  --accent-soft: #edf1ff;
+  --ghost: #a8a8a4;
+  --moss: #3d7a4e;
+  --flag: #c0442f;
+
+  --shadow-float: 0 28px 56px -24px rgba(0, 0, 0, 0.22),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+  --shadow-lift: 0 1px 2px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.11);
+  --shadow-well: inset 0 1px 2px rgba(0, 0, 0, 0.05),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+  --shadow-cap: 0 1.5px 0 rgba(0, 0, 0, 0.09), inset 0 0 0 1px rgba(0, 0, 0, 0.11);
+}
+
+.dark {
+  --bezel: #141312;
+  --panel: #1d1d1a;
+  --well: #252522;
+  --sub: #1a1a17;
+
+  --hairline: rgba(255, 255, 255, 0.16);
+  --hairline-strong: rgba(255, 255, 255, 0.28);
+
+  --ink: #f8f8f4;
+  --ink-2: #c2c2ba;
+  --ink-3: #93938b;
+
+  --accent: #93b0ff;
+  --accent-soft: rgba(147, 176, 255, 0.14);
+  --ghost: #605f59;
+  --moss: #5bd79c;
+  --flag: #f5897f;
+
+  --shadow-float: 0 28px 56px -22px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  --shadow-lift: 0 1px 2px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --shadow-well: inset 0 1px 3px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  --shadow-cap: 0 1.5px 0 rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+@theme inline {
+  --color-bezel: var(--bezel);
+  --color-panel: var(--panel);
+  --color-well: var(--well);
+  --color-sub: var(--sub);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-ghost: var(--ghost);
+  --color-moss: var(--moss);
+  --color-flag: var(--flag);
+
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+}
+
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--bezel);
+  color: var(--ink);
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+/* ── the materials ─────────────────────────────────────────── */
+
+.mat-panel {
+  background: var(--panel);
+  box-shadow: var(--shadow-lift);
+}
+.mat-float {
+  background: var(--panel);
+  box-shadow: var(--shadow-float);
+}
+.mat-well {
+  background: var(--well);
+  box-shadow: var(--shadow-well);
+}
+.mat-cap {
+  background: var(--panel);
+  box-shadow: var(--shadow-cap);
+}
+
+/* ── typography ────────────────────────────────────────────── */
+
+/* The instrument voice: metadata only, never prose. */
+.meta {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* ── scrollbars: a 3px mark, nothing else ──────────────────── */
+
+::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: color-mix(in oklab, var(--ink) 12%, transparent);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in oklab, var(--ink) 26%, transparent);
+}
+
+/* Firefox parses the webkit pseudo-elements without implementing them, so it
+   has to be reached through the property nothing else implements. */
+@supports (-moz-appearance: none) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--ink) 12%, transparent) transparent;
+  }
+}
+
+/* ── press ─────────────────────────────────────────────────── */
+
+.press {
+  transition:
+    transform 0.12s cubic-bezier(0.23, 1, 0.32, 1),
+    background-color 0.15s ease;
+}
+.press:active {
+  transform: translateY(1px);
+}
+
+/* ── focus ─────────────────────────────────────────────────── */
+
+/* Layered, so a control drawing its own focus ring can opt out with a plain
+   utility. Unlayered rules beat every layered utility whatever the
+   specificity, so this must not sit outside a layer. */
+@layer base {
+  :where(a, button, input, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

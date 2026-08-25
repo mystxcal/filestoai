@@ -1,0 +1,22 @@
+[package]
+name = "filestoai"
+description = "Export a codebase as context for a language model, from the command line or a local interface."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+readme = "../../README.md"
+keywords = ["llm", "context", "codebase", "prompt", "cli"]
+categories = ["command-line-utilities", "development-tools"]
+
+[[bin]]
+name = "filestoai"
+path = "src/main.rs"
+
+[dependencies]
+filestoai-core = { workspace = true }
+filestoai-server = { workspace = true }
+clap = { version = "4", features = ["derive", "wrap_help"] }
+arboard = { version = "3", default-features = false }

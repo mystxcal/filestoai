@@ -1,0 +1,21 @@
+[package]
+name = "filestoai-server"
+description = "The local interface for FilesToAI."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+# dist/ is the compiled interface. It is committed, and it must be packaged.
+include = ["src/**/*", "dist/**/*", "Cargo.toml"]
+
+[dependencies]
+filestoai-core = { workspace = true }
+axum = { version = "0.8", default-features = false, features = ["http1", "json", "query", "tokio"] }
+tokio = { version = "1", features = ["rt-multi-thread", "net", "macros", "signal"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+rust-embed = { version = "8", features = ["mime-guess"] }
+getrandom = "0.3"
+dirs = "6"

@@ -1,0 +1,7 @@
+/target
+ui/node_modules
+ui/tsconfig.tsbuildinfo
+
+# crates/server/dist is deliberately committed: it is the compiled interface
+# the server crate embeds, and `cargo install filestoai` has to work without a
+# Node toolchain anywhere in sight.
